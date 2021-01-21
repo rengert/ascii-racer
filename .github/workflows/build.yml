@@ -1,0 +1,30 @@
+name: Global build & lint & test
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      matrix:
+        node-version: [14.x]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - uses: actions/cache@v1
+        with:
+          path: apps/node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-
+      - run: npm install
+      - run: npm run lint
+      - run: npm run build
+        env:
+          CI: true
