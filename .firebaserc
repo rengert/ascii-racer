@@ -1,0 +1,14 @@
+{
+  "projects": {
+    "default": "bolzplatzarena"
+  },
+  "targets": {
+    "bolzplatzarena": {
+      "hosting": {
+        "ascii-racer": [
+          "ascii-racer"
+        ]
+      }
+    }
+  }
+}
