@@ -1,5 +1,5 @@
 {
-  "npmScope": "bolzplatzarena.ascii-racer",
+  "npmScope": "ascii-racer",
   "affected": {
     "defaultBase": "master"
   },

@@ -14,7 +14,7 @@
           "error",
           {
             "type": "attribute",
-            "prefix": "bolzplatzarena.ascii-racer",
+            "prefix": "ascii-racer",
             "style": "camelCase"
           }
         ],
@@ -22,7 +22,7 @@
           "error",
           {
             "type": "element",
-            "prefix": "bolzplatzarena.ascii-racer",
+            "prefix": "ascii-racer",
             "style": "kebab-case"
           }
         ]

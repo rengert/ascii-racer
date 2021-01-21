@@ -5,7 +5,7 @@
       "projectType": "application",
       "root": "apps/ascii-racer",
       "sourceRoot": "apps/ascii-racer/src",
-      "prefix": "bolzplatzarena.ascii-racer",
+      "prefix": "ascii-racer",
       "architect": {
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
