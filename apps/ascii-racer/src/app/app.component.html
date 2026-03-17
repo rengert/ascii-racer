@@ -1,8 +1,26 @@
-Gefahrene Kilometer: {{ way }}
-Unfälle: {{ crashs }}
-<div *ngFor="let row of data$ | async; trackBy: trackByFn; let line = index;">
-  <span *ngFor="let cell of row; trackBy: trackByFn; let column = index"
-        [class.green]="cell === '1'"
-        [class.middle]="cell === '|'"
-        [class.racer]="column === racerPosition && line === racerPositionY">{{ column === racerPosition && line === racerPositionY ? 'H' : cell }}</span>
+<div class="stats">
+  <span>Gefahrene Kilometer: {{ way }}</span>
+  <span>Unfälle: {{ crashs }} / {{ maxCrashes }}</span>
+  <span>Highscore: {{ highScore }}</span>
+  <span class="hint">[ ← → ] Fahren &nbsp;|&nbsp; [ Leertaste ] Pause</span>
+</div>
+<div class="game-container">
+  <div *ngFor="let row of data$ | async; trackBy: trackByFn; let line = index;">
+    <span *ngFor="let cell of row; trackBy: trackByFn; let column = index"
+          [class.green]="cell === '1'"
+          [class.middle]="cell === '|'"
+          [class.obstacle]="cell === 'X'"
+          [class.racer]="column === racerPosition && line === racerPositionY">{{ column === racerPosition && line === racerPositionY ? 'H' : cell }}</span>
+  </div>
+  <div *ngIf="isGameOver" class="overlay game-over">
+    <h2>💥 Game Over!</h2>
+    <p>Gefahrene Kilometer: <strong>{{ way }}</strong></p>
+    <p>Unfälle: <strong>{{ crashs }}</strong></p>
+    <p *ngIf="way > highScore && highScore > 0">🏆 Neuer Highscore!</p>
+    <button (click)="restart()">Nochmal fahren</button>
+  </div>
+  <div *ngIf="isPaused" class="overlay paused">
+    <h2>⏸ Pause</h2>
+    <p>Drücke Leertaste zum Weiterspielen</p>
+  </div>
 </div>
