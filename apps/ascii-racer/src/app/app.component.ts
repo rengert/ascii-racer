@@ -1,9 +1,9 @@
 import { Component, HostListener } from '@angular/core';
+import { AsyncPipe } from '@angular/common';
 import { last, round } from 'lodash';
 import { Observable, timer } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 
-// eslint-disable-next-line no-shadow
 enum Direction {
   left = 'ArrowLeft',
   up = 'ArrowUp',
@@ -13,6 +13,8 @@ enum Direction {
 
 @Component({
   selector: 'ascii-racer-root',
+  standalone: true,
+  imports: [AsyncPipe],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
 })
@@ -34,7 +36,7 @@ export class AppComponent {
   isPaused = false;
   highScore = 0;
 
-  private last: string[][];
+  private last!: string[][];
   private readonly track = [15, 35];
 
   constructor() {
@@ -78,7 +80,7 @@ export class AppComponent {
     this.createTrack();
   }
 
-  trackByFn(_: number, item: any): any {
+  trackByFn(_: number, item: unknown): unknown {
     return item;
   }
 
