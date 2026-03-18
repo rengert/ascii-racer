@@ -24,6 +24,8 @@ const SPEED_TIERS: SpeedTier[] = [
   { minKm: 15, intervalMs: 20, label: '🚀 Hyperspeed' },
 ];
 
+const SPEED_TIERS_DESC = [...SPEED_TIERS].reverse();
+
 @Component({
   selector: 'ascii-racer-root',
   standalone: true,
@@ -79,10 +81,10 @@ export class AppComponent {
     }
     if (this.isGameOver || this.isPaused) return;
     const direction = e.key as Direction;
-    if (direction === Direction.left || e.key === 'a') {
+    if (direction === Direction.left || e.key.toLowerCase() === 'a') {
       this.racerPosition -= 1;
     }
-    if (direction === Direction.right || e.key === 'd') {
+    if (direction === Direction.right || e.key.toLowerCase() === 'd') {
       this.racerPosition += 1;
     }
   }
@@ -174,7 +176,7 @@ export class AppComponent {
   }
 
   private updateSpeed(): void {
-    const newTier = [...SPEED_TIERS].reverse().find(t => this.way >= t.minKm) ?? SPEED_TIERS[0];
+    const newTier = SPEED_TIERS_DESC.find(t => this.way >= t.minKm) ?? SPEED_TIERS[0];
     this.speedTier = newTier;
     if (newTier.intervalMs !== this.speedMs$.getValue()) {
       this.speedMs$.next(newTier.intervalMs);
