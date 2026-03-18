@@ -1,9 +1,8 @@
 import { Component, HostListener } from '@angular/core';
-import { last, round } from 'lodash';
-import { Observable, timer } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
+import { AsyncPipe } from '@angular/common';
 
-// eslint-disable-next-line no-shadow
+import { Observable, map, tap, timer } from 'rxjs';
+
 enum Direction {
   left = 'ArrowLeft',
   up = 'ArrowUp',
@@ -13,6 +12,8 @@ enum Direction {
 
 @Component({
   selector: 'ascii-racer-root',
+  standalone: true,
+  imports: [AsyncPipe],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
 })
@@ -34,7 +35,7 @@ export class AppComponent {
   isPaused = false;
   highScore = 0;
 
-  private last: string[][];
+  private trackData!: string[][];
   private readonly track = [15, 35];
 
   constructor() {
@@ -43,7 +44,7 @@ export class AppComponent {
       map(() => this.updateTrack()),
       tap(() => {
         if (!this.isGameOver && !this.isPaused) {
-          this.way = round(this.way + 0.001, 3);
+          this.way = Math.round((this.way + 0.001) * 1000) / 1000;
         }
       }),
       tap(data => this.check(data)),
@@ -78,20 +79,20 @@ export class AppComponent {
     this.createTrack();
   }
 
-  trackByFn(_: number, item: any): any {
+  trackByFn(_: number, item: string | string[]): string | string[] {
     return item;
   }
 
   private updateTrack(): string[][] {
     if (this.isGameOver || this.isPaused) {
-      return this.last || [];
+      return this.trackData || [];
     }
-    if (!this.last) {
+    if (!this.trackData) {
       this.createTrack();
     }
-    this.last = this.last.reverse();
-    this.last = this.last.splice(1, this.last.length - 1);
-    this.last[this.trackLength - 1] = [];
+    this.trackData = this.trackData.reverse();
+    this.trackData = this.trackData.splice(1, this.trackData.length - 1);
+    this.trackData[this.trackLength - 1] = [];
     const random = Math.floor(Math.random() * 3);
     switch (random) {
       case 0:
@@ -116,26 +117,26 @@ export class AppComponent {
       : -1;
 
     for (let j = 0; j < this.trackWitdth; j++) {
-      this.last[this.trackLength - 1][j] = j < this.track[0] || j > this.track[1] ? '1' : '8';
+      this.trackData[this.trackLength - 1][j] = j < this.track[0] || j > this.track[1] ? '1' : '8';
       if (j === this.track[0] + 10) {
-        this.last[this.trackLength - 1][j] = '|';
+        this.trackData[this.trackLength - 1][j] = '|';
       }
       if (j === obstaclePos) {
-        this.last[this.trackLength - 1][j] = 'X';
+        this.trackData[this.trackLength - 1][j] = 'X';
       }
     }
 
-    return this.last.reverse();
+    return this.trackData.reverse();
   }
 
   private createTrack(): void {
-    this.last = [];
+    this.trackData = [];
     for (let i = 0; i < this.trackLength; i++) {
-      this.last[i] = [];
+      this.trackData[i] = [];
       for (let j = 0; j < this.trackWitdth; j++) {
-        this.last[i][j] = j < this.track[0] || j > this.track[1] ? '1' : '8';
+        this.trackData[i][j] = j < this.track[0] || j > this.track[1] ? '1' : '8';
         if (j === this.track[0] + 10) {
-          this.last[i][j] = '|';
+          this.trackData[i][j] = '|';
         }
       }
     }
@@ -143,14 +144,14 @@ export class AppComponent {
 
   private check(data: string[][]) {
     if (this.isGameOver || this.isPaused) return;
-    const lastLine = last(data);
+    const lastLine = data.at(-1);
     if (lastLine && (lastLine[this.racerPosition] === '1' || lastLine[this.racerPosition] === 'X')) {
       this.crashs++;
       console.log('Das war ein Unfall');
       if (this.crashs >= this.maxCrashes) {
         this.isGameOver = true;
         if (this.way > this.highScore) {
-          this.highScore = round(this.way, 3);
+          this.highScore = Math.round(this.way * 1000) / 1000;
           localStorage.setItem(this.highScoreKey, String(this.highScore));
         }
       }

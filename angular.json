@@ -8,36 +8,30 @@
       "prefix": "ascii-racer",
       "architect": {
         "build": {
-          "builder": "@angular-devkit/build-angular:browser",
+          "builder": "@angular-devkit/build-angular:application",
           "options": {
             "outputPath": "dist/apps/ascii-racer",
             "index": "apps/ascii-racer/src/index.html",
-            "main": "apps/ascii-racer/src/main.ts",
-            "polyfills": "apps/ascii-racer/src/polyfills.ts",
+            "browser": "apps/ascii-racer/src/main.ts",
+            "polyfills": ["zone.js"],
             "tsConfig": "apps/ascii-racer/tsconfig.app.json",
-            "aot": true,
             "assets": [
-              "apps/ascii-racer/src/favicon.ico",
-              "apps/ascii-racer/src/assets"
+              {
+                "glob": "**/*",
+                "input": "apps/ascii-racer/src/assets",
+                "output": "assets"
+              },
+              {
+                "glob": "favicon.ico",
+                "input": "apps/ascii-racer/src/",
+                "output": "/"
+              }
             ],
             "styles": ["apps/ascii-racer/src/styles.scss"],
             "scripts": []
           },
           "configurations": {
             "production": {
-              "fileReplacements": [
-                {
-                  "replace": "apps/ascii-racer/src/environments/environment.ts",
-                  "with": "apps/ascii-racer/src/environments/environment.prod.ts"
-                }
-              ],
-              "optimization": true,
-              "outputHashing": "all",
-              "sourceMap": false,
-              "namedChunks": false,
-              "extractLicenses": true,
-              "vendorChunk": false,
-              "buildOptimizer": true,
               "budgets": [
                 {
                   "type": "initial",
@@ -49,43 +43,60 @@
                   "maximumWarning": "6kb",
                   "maximumError": "10kb"
                 }
+              ],
+              "outputHashing": "all",
+              "fileReplacements": [
+                {
+                  "replace": "apps/ascii-racer/src/environments/environment.ts",
+                  "with": "apps/ascii-racer/src/environments/environment.prod.ts"
+                }
               ]
+            },
+            "development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true
             }
-          }
+          },
+          "defaultConfiguration": "production"
         },
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "ascii-racer:build"
+            "buildTarget": "ascii-racer:build"
           },
           "configurations": {
             "production": {
-              "browserTarget": "ascii-racer:build:production"
+              "buildTarget": "ascii-racer:build:production"
+            },
+            "development": {
+              "buildTarget": "ascii-racer:build:development"
             }
-          }
+          },
+          "defaultConfiguration": "development"
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "ascii-racer:build"
+            "buildTarget": "ascii-racer:build"
           }
         },
         "lint": {
-          "builder": "@nrwl/linter:eslint",
+          "builder": "@nx/eslint:lint",
           "options": {
             "lintFilePatterns": [
               "apps/ascii-racer/src/**/*.ts",
               "apps/ascii-racer/src/**/*.html"
-            ]
+            ],
+            "eslintConfig": "apps/ascii-racer/eslint.config.cjs"
           }
         },
         "test": {
-          "builder": "@nrwl/jest:jest",
-          "outputs": ["coverage/apps/ascii-racer"],
+          "builder": "@nx/jest:jest",
           "options": {
-            "jestConfig": "apps/ascii-racer/jest.config.js",
-            "passWithNoTests": true
-          }
+            "jestConfig": "apps/ascii-racer/jest.config.js"
+          },
+          "outputs": ["{workspaceRoot}/coverage/apps/ascii-racer"]
         }
       }
     },
@@ -95,10 +106,9 @@
       "projectType": "application",
       "architect": {
         "e2e": {
-          "builder": "@nrwl/cypress:cypress",
+          "builder": "@nx/cypress:cypress",
           "options": {
             "cypressConfig": "apps/ascii-racer-e2e/cypress.json",
-            "tsConfig": "apps/ascii-racer-e2e/tsconfig.e2e.json",
             "devServerTarget": "ascii-racer:serve"
           },
           "configurations": {
@@ -108,39 +118,17 @@
           }
         },
         "lint": {
-          "builder": "@nrwl/linter:eslint",
+          "builder": "@nx/eslint:lint",
           "options": {
-            "lintFilePatterns": ["apps/ascii-racer-e2e/**/*.{js,ts}"]
+            "lintFilePatterns": [
+              "apps/ascii-racer-e2e/**/*.ts"
+            ]
           }
         }
       }
     }
   },
   "cli": {
-    "defaultCollection": "@nrwl/angular"
-  },
-  "schematics": {
-    "@nrwl/angular": {
-      "application": {
-        "linter": "eslint"
-      },
-      "library": {
-        "linter": "eslint"
-      },
-      "storybook-configuration": {
-        "linter": "eslint"
-      }
-    },
-    "@nrwl/angular:application": {
-      "unitTestRunner": "jest",
-      "e2eTestRunner": "cypress"
-    },
-    "@nrwl/angular:library": {
-      "unitTestRunner": "jest"
-    },
-    "@nrwl/angular:component": {
-      "style": "scss"
-    }
-  },
-  "defaultProject": "ascii-racer"
+    "defaultCollection": "@nx/angular"
+  }
 }
