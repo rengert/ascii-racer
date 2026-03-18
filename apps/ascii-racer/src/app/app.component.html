@@ -1,8 +1,10 @@
 <div class="stats">
   <span>Gefahrene Kilometer: {{ way }}</span>
   <span>Unfälle: {{ crashs }} / {{ maxCrashes }}</span>
+  <span>⭐ {{ stars }}</span>
+  <span>{{ speedTier.label }}</span>
   <span>Highscore: {{ highScore }}</span>
-  <span class="hint">[ ← → ] Fahren &nbsp;|&nbsp; [ Leertaste ] Pause</span>
+  <span class="hint">[ ← → / A D ] Fahren &nbsp;|&nbsp; [ Leertaste ] Pause</span>
 </div>
 <div class="game-container">
   @for (row of (data$ | async) ?? []; track trackByFn($index, row); let line = $index) {
@@ -12,6 +14,7 @@
           [class.green]="cell === '1'"
           [class.middle]="cell === '|'"
           [class.obstacle]="cell === 'X'"
+          [class.powerup]="cell === '$'"
           [class.racer]="column === racerPosition && line === racerPositionY">{{ column === racerPosition && line === racerPositionY ? 'H' : cell }}</span>
       }
     </div>
@@ -21,7 +24,9 @@
       <h2>💥 Game Over!</h2>
       <p>Gefahrene Kilometer: <strong>{{ way }}</strong></p>
       <p>Unfälle: <strong>{{ crashs }}</strong></p>
-      @if (way > highScore && highScore > 0) {
+      <p>⭐ Sterne gesammelt: <strong>{{ stars }}</strong></p>
+      <p>Geschwindigkeit: <strong>{{ speedTier.label }}</strong></p>
+      @if (isNewHighScore) {
         <p>🏆 Neuer Highscore!</p>
       }
       <button (click)="restart()">Nochmal fahren</button>
