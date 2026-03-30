@@ -35,7 +35,19 @@
   @if (isPaused) {
     <div class="overlay paused">
       <h2>⏸ Pause</h2>
-      <p>Drücke Leertaste zum Weiterspielen</p>
+      <p>Drücke Leertaste oder ⏸ zum Weiterspielen</p>
     </div>
   }
+</div>
+<div class="touch-controls">
+  <button class="ctrl-btn"
+    (pointerdown)="startMoving('left')"
+    (pointerup)="stopMoving()"
+    (pointercancel)="stopMoving()">◀</button>
+  <button class="ctrl-btn pause-btn"
+    (click)="togglePause()">⏸</button>
+  <button class="ctrl-btn"
+    (pointerdown)="startMoving('right')"
+    (pointerup)="stopMoving()"
+    (pointercancel)="stopMoving()">▶</button>
 </div>

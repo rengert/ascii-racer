@@ -1,4 +1,4 @@
-import { Component, HostListener } from '@angular/core';
+import { Component, HostListener, OnDestroy } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
 
 import { BehaviorSubject, Observable, map, switchMap, tap, timer } from 'rxjs';
@@ -33,7 +33,7 @@ const SPEED_TIERS_DESC = [...SPEED_TIERS].reverse();
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
 })
-export class AppComponent {
+export class AppComponent implements OnDestroy {
   readonly data$: Observable<string[][]>;
   readonly trackWitdth = 100;
   readonly trackLength = 50;
@@ -56,6 +56,7 @@ export class AppComponent {
 
   private trackData!: string[][];
   private readonly track = [15, 35];
+  private moveIntervalId: ReturnType<typeof setInterval> | null = null;
 
   constructor() {
     this.highScore = parseFloat(localStorage.getItem(this.highScoreKey) || '0');
@@ -82,14 +83,42 @@ export class AppComponent {
     if (this.isGameOver || this.isPaused) return;
     const direction = e.key as Direction;
     if (direction === Direction.left || e.key.toLowerCase() === 'a') {
-      this.racerPosition -= 1;
+      this.doMove('left');
     }
     if (direction === Direction.right || e.key.toLowerCase() === 'd') {
-      this.racerPosition += 1;
+      this.doMove('right');
     }
   }
 
+  /** Start continuous movement while a touch/pointer button is held. */
+  startMoving(dir: 'left' | 'right'): void {
+    if (this.isGameOver || this.isPaused) return;
+    this.stopMoving();
+    this.doMove(dir);
+    this.moveIntervalId = setInterval(() => this.doMove(dir), 150);
+  }
+
+  /** Stop continuous movement (called on pointerup / pointercancel). */
+  stopMoving(): void {
+    if (this.moveIntervalId !== null) {
+      clearInterval(this.moveIntervalId);
+      this.moveIntervalId = null;
+    }
+  }
+
+  /** Toggle pause – used by both spacebar and the on-screen pause button. */
+  togglePause(): void {
+    if (!this.isGameOver) {
+      this.isPaused = !this.isPaused;
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.stopMoving();
+  }
+
   restart(): void {
+    this.stopMoving();
     this.crashs = 0;
     this.way = 0;
     this.isGameOver = false;
@@ -106,6 +135,15 @@ export class AppComponent {
 
   trackByFn(_: number, item: string | string[]): string | string[] {
     return item;
+  }
+
+  private doMove(dir: 'left' | 'right'): void {
+    if (this.isGameOver || this.isPaused) return;
+    if (dir === 'left') {
+      this.racerPosition -= 1;
+    } else {
+      this.racerPosition += 1;
+    }
   }
 
   private updateTrack(): string[][] {

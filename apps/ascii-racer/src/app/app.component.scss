@@ -4,6 +4,10 @@
   min-width: 300px;
   max-width: 600px;
   margin: 50px auto;
+
+  @media (max-width: 600px) {
+    margin: 8px auto;
+  }
 }
 
 .stats {
@@ -21,6 +25,9 @@
 
 .game-container {
   position: relative;
+  overflow-x: auto;
+  /* 100 track columns + ~5 for letter-spacing/margin: scales so all columns fit in the viewport */
+  font-size: min(9px, calc(100vw / 105));
 }
 
 span {
@@ -103,4 +110,35 @@ span {
 
 .paused {
   border-color: #ffd700;
+}
+
+.touch-controls {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 16px;
+
+  .ctrl-btn {
+    width: 72px;
+    height: 72px;
+    font-size: 28px;
+    background: #1a1a1a;
+    color: #fff;
+    border: 2px solid #555;
+    border-radius: 12px;
+    cursor: pointer;
+    user-select: none;
+    touch-action: none;
+
+    &:active {
+      background: #444;
+      border-color: #888;
+    }
+
+    &.pause-btn {
+      background: #1a1a2e;
+      border-color: #ffd700;
+      color: #ffd700;
+    }
+  }
 }
