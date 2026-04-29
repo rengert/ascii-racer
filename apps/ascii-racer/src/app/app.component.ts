@@ -26,6 +26,12 @@ const SPEED_TIERS: SpeedTier[] = [
 
 const SPEED_TIERS_DESC = [...SPEED_TIERS].reverse();
 
+const NITRO_SPEED_MS = 12;
+const NITRO_DURATION_MS = 5000;
+const SHIELD_DURATION_MS = 3000;
+const MILESTONE_DISPLAY_DURATION_MS = 2500;
+const MILESTONE_INTERVAL_KM = 5;
+
 @Component({
   selector: 'ascii-racer-root',
   standalone: true,
@@ -54,9 +60,17 @@ export class AppComponent implements OnDestroy {
   speedTier: SpeedTier = SPEED_TIERS[0];
   isNewHighScore = false;
 
+  isNitroActive = false;
+  isShielded = false;
+  milestoneVisible = false;
+  currentMilestone = 0;
+
   private trackData!: string[][];
   private readonly track = [15, 35];
   private moveIntervalId: ReturnType<typeof setInterval> | null = null;
+  private nitroTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  private shieldTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  private milestoneTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
     this.highScore = parseFloat(localStorage.getItem(this.highScoreKey) || '0');
@@ -67,6 +81,7 @@ export class AppComponent implements OnDestroy {
         if (!this.isGameOver && !this.isPaused) {
           this.way = Math.round((this.way + 0.001) * 1000) / 1000;
           this.updateSpeed();
+          this.checkMilestone();
         }
       }),
       tap(data => this.check(data)),
@@ -115,6 +130,9 @@ export class AppComponent implements OnDestroy {
 
   ngOnDestroy(): void {
     this.stopMoving();
+    if (this.nitroTimeoutId !== null) clearTimeout(this.nitroTimeoutId);
+    if (this.shieldTimeoutId !== null) clearTimeout(this.shieldTimeoutId);
+    if (this.milestoneTimeoutId !== null) clearTimeout(this.milestoneTimeoutId);
   }
 
   restart(): void {
@@ -127,6 +145,22 @@ export class AppComponent implements OnDestroy {
     this.stars = 0;
     this.speedTier = SPEED_TIERS[0];
     this.isNewHighScore = false;
+    this.isNitroActive = false;
+    this.isShielded = false;
+    this.milestoneVisible = false;
+    this.currentMilestone = 0;
+    if (this.nitroTimeoutId !== null) {
+      clearTimeout(this.nitroTimeoutId);
+      this.nitroTimeoutId = null;
+    }
+    if (this.shieldTimeoutId !== null) {
+      clearTimeout(this.shieldTimeoutId);
+      this.shieldTimeoutId = null;
+    }
+    if (this.milestoneTimeoutId !== null) {
+      clearTimeout(this.milestoneTimeoutId);
+      this.milestoneTimeoutId = null;
+    }
     this.speedMs$.next(SPEED_TIERS[0].intervalMs);
     this.track[0] = 15;
     this.track[1] = 35;
@@ -172,6 +206,18 @@ export class AppComponent implements OnDestroy {
         break;
     }
 
+    // Narrow road progressively: target width shrinks from 20 down to 8 over ~22 km
+    const targetWidth = Math.max(8, 20 - Math.floor(this.way * 0.55));
+    if (this.track[1] - this.track[0] > targetWidth) {
+      if (Math.random() < 0.5) {
+        this.track[1]--;
+      } else {
+        this.track[0]++;
+      }
+    }
+    if (this.track[0] < 0) this.track[0] = 0;
+    if (this.track[1] >= this.trackWitdth) this.track[1] = this.trackWitdth - 1;
+
     const roadWidth = this.track[1] - this.track[0];
     const obstacleChance = Math.min(0.05 + this.way * 0.01, 0.25);
     const hasObstacle = roadWidth > 4 && Math.random() < obstacleChance;
@@ -181,6 +227,11 @@ export class AppComponent implements OnDestroy {
 
     const hasPowerUp = !hasObstacle && roadWidth > 4 && Math.random() < 0.04;
     const powerUpPos = hasPowerUp
+      ? this.track[0] + 1 + Math.floor(Math.random() * (roadWidth - 2))
+      : -1;
+
+    const hasNitro = !hasObstacle && !hasPowerUp && roadWidth > 4 && Math.random() < 0.025;
+    const nitroPos = hasNitro
       ? this.track[0] + 1 + Math.floor(Math.random() * (roadWidth - 2))
       : -1;
 
@@ -194,6 +245,9 @@ export class AppComponent implements OnDestroy {
       }
       if (j === powerUpPos) {
         this.trackData[this.trackLength - 1][j] = '$';
+      }
+      if (j === nitroPos) {
+        this.trackData[this.trackLength - 1][j] = 'N';
       }
     }
 
@@ -214,6 +268,7 @@ export class AppComponent implements OnDestroy {
   }
 
   private updateSpeed(): void {
+    if (this.isNitroActive) return;
     const newTier = SPEED_TIERS_DESC.find(t => this.way >= t.minKm) ?? SPEED_TIERS[0];
     this.speedTier = newTier;
     if (newTier.intervalMs !== this.speedMs$.getValue()) {
@@ -231,18 +286,64 @@ export class AppComponent implements OnDestroy {
         this.crashs--;
       }
       this.stars++;
+      this.activateShield();
+      lastLine[this.racerPosition] = '8';
+    } else if (cell === 'N') {
+      this.activateNitro();
+      this.stars++;
       lastLine[this.racerPosition] = '8';
     } else if (cell === '1' || cell === 'X') {
-      this.crashs++;
-      console.log('Das war ein Unfall');
-      if (this.crashs >= this.maxCrashes) {
-        this.isGameOver = true;
-        if (this.way > this.highScore) {
-          this.isNewHighScore = true;
-          this.highScore = Math.round(this.way * 1000) / 1000;
-          localStorage.setItem(this.highScoreKey, String(this.highScore));
+      if (!this.isShielded) {
+        this.crashs++;
+        console.log('Das war ein Unfall');
+        if (this.crashs >= this.maxCrashes) {
+          this.isGameOver = true;
+          if (this.way > this.highScore) {
+            this.isNewHighScore = true;
+            this.highScore = Math.round(this.way * 1000) / 1000;
+            localStorage.setItem(this.highScoreKey, String(this.highScore));
+          }
         }
       }
+    }
+  }
+
+  private activateNitro(): void {
+    this.isNitroActive = true;
+    this.speedMs$.next(NITRO_SPEED_MS);
+    if (this.nitroTimeoutId !== null) {
+      clearTimeout(this.nitroTimeoutId);
+    }
+    this.nitroTimeoutId = setTimeout(() => {
+      this.isNitroActive = false;
+      this.nitroTimeoutId = null;
+      this.speedMs$.next(this.speedTier.intervalMs);
+    }, NITRO_DURATION_MS);
+  }
+
+  private activateShield(): void {
+    this.isShielded = true;
+    if (this.shieldTimeoutId !== null) {
+      clearTimeout(this.shieldTimeoutId);
+    }
+    this.shieldTimeoutId = setTimeout(() => {
+      this.isShielded = false;
+      this.shieldTimeoutId = null;
+    }, SHIELD_DURATION_MS);
+  }
+
+  private checkMilestone(): void {
+    const nearestMilestone = Math.floor(this.way / MILESTONE_INTERVAL_KM) * MILESTONE_INTERVAL_KM;
+    if (nearestMilestone > this.currentMilestone && nearestMilestone > 0) {
+      this.currentMilestone = nearestMilestone;
+      this.milestoneVisible = true;
+      if (this.milestoneTimeoutId !== null) {
+        clearTimeout(this.milestoneTimeoutId);
+      }
+      this.milestoneTimeoutId = setTimeout(() => {
+        this.milestoneVisible = false;
+        this.milestoneTimeoutId = null;
+      }, MILESTONE_DISPLAY_DURATION_MS);
     }
   }
 }

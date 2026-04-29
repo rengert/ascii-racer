@@ -21,6 +21,17 @@
     color: #666;
     font-style: italic;
   }
+
+  .nitro-active {
+    color: #ff6600;
+    font-weight: bold;
+    animation: nitro-pulse 0.4s infinite alternate;
+  }
+
+  .shield-active {
+    color: #00ccff;
+    font-weight: bold;
+  }
 }
 
 .game-container {
@@ -50,6 +61,15 @@ span {
   &.obstacle {
     color: orange;
     font-weight: bold;
+  }
+
+  &.nitro {
+    color: #ff6600;
+    font-weight: bold;
+  }
+
+  &.shielded-racer {
+    animation: blink 0.3s infinite;
   }
 
   &.powerup {
@@ -110,6 +130,43 @@ span {
 
 .paused {
   border-color: #ffd700;
+}
+
+.milestone {
+  border-color: #ffd700;
+  animation: milestone-fade 2.5s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0.3;
+  }
+}
+
+@keyframes nitro-pulse {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.6;
+  }
+}
+
+@keyframes milestone-fade {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+  20% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 .touch-controls {

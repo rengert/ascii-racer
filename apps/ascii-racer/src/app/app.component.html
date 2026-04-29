@@ -3,6 +3,12 @@
   <span>Unfälle: {{ crashs }} / {{ maxCrashes }}</span>
   <span>⭐ {{ stars }}</span>
   <span>{{ speedTier.label }}</span>
+  @if (isNitroActive) {
+    <span class="nitro-active">🔥 Nitro!</span>
+  }
+  @if (isShielded) {
+    <span class="shield-active">🛡️ Shield!</span>
+  }
   <span>Highscore: {{ highScore }}</span>
   <span class="hint">[ ← → / A D ] Fahren &nbsp;|&nbsp; [ Leertaste ] Pause</span>
 </div>
@@ -15,7 +21,9 @@
           [class.middle]="cell === '|'"
           [class.obstacle]="cell === 'X'"
           [class.powerup]="cell === '$'"
-          [class.racer]="column === racerPosition && line === racerPositionY">{{ column === racerPosition && line === racerPositionY ? 'H' : cell }}</span>
+          [class.nitro]="cell === 'N'"
+          [class.racer]="column === racerPosition && line === racerPositionY"
+          [class.shielded-racer]="column === racerPosition && line === racerPositionY && isShielded">{{ column === racerPosition && line === racerPositionY ? 'H' : cell }}</span>
       }
     </div>
   }
@@ -36,6 +44,12 @@
     <div class="overlay paused">
       <h2>⏸ Pause</h2>
       <p>Drücke Leertaste oder ⏸ zum Weiterspielen</p>
+    </div>
+  }
+  @if (milestoneVisible && !isGameOver) {
+    <div class="overlay milestone">
+      <h2>🏁 {{ currentMilestone }} km erreicht!</h2>
+      <p>Weiter so! 🎉</p>
     </div>
   }
 </div>
